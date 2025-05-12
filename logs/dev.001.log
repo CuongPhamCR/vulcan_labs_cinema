@@ -1,0 +1,9 @@
+{"level":"INFO","time":"2025-05-12T14:44:04.144+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T14:44:34.467+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T23:43:04.167+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T23:43:41.153+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T23:45:10.357+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T23:50:21.908+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T23:50:55.455+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T23:51:17.859+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
+{"level":"INFO","time":"2025-05-12T23:51:41.976+0700","caller":"initialize/run.go:17","msg":"load config success to global.Config"}
