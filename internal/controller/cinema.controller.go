@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"time"
 	"vulcan_labs_cinema/internal/interfaces"
 	"vulcan_labs_cinema/internal/services"
 	"vulcan_labs_cinema/pkg/response"
@@ -31,13 +32,25 @@ func (cc *CinemaController) InitCinema(c *gin.Context) {
 		return
 	}
 
-	cinemaId, err := cc.cinemaService.InitCinema(payload.Rows, payload.Cols, payload.MinDistance)
+	err := cc.cinemaService.InitCinema(payload.Rows, payload.Cols, payload.MinDistance)
 	if err != nil {
 		response.ErrorResponse(c, http.StatusInternalServerError, response.ErrCodeInternalServer, err.Error())
 		return
 	}
 
-	response.SuccessResponse(c, response.ErrCodeSuccess, map[string]interface{}{
-		"cinema_id": cinemaId,
+	type CinemaResponse struct {
+		Status      string `json:"status"`
+		CreatedAt   string `json:"created_at"`
+		Rows        int    `json:"rows"`
+		Cols        int    `json:"cols"`
+		MinDistance int    `json:"min_distance"`
+	}
+
+	response.SuccessResponse(c, response.ErrCodeSuccess, CinemaResponse{
+		Status:      "success",
+		CreatedAt:   time.Now().Format(time.RFC3339),
+		Rows:        payload.Rows,
+		Cols:        payload.Cols,
+		MinDistance: payload.MinDistance,
 	})
 }

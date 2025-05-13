@@ -7,7 +7,7 @@ import (
 )
 
 type ICinemaService interface {
-	InitCinema(rows int, cols int, minDistance int) (int, error)
+	InitCinema(rows int, cols int, minDistance int) error
 }
 
 type cinemaService struct{}
@@ -17,7 +17,7 @@ func NewCinemaService() ICinemaService {
 }
 
 // InitCinema implements ICinemaService.
-func (c *cinemaService) InitCinema(rows int, cols int, minDistance int) (int, error) {
+func (c *cinemaService) InitCinema(rows int, cols int, minDistance int) error {
 	seats := make([][]*interfaces.Seat, rows)
 	for i := range rows {
 		seats[i] = make([]*interfaces.Seat, cols)
@@ -25,9 +25,6 @@ func (c *cinemaService) InitCinema(rows int, cols int, minDistance int) (int, er
 			seats[i][j] = &interfaces.Seat{Row: i, Col: j, Taken: false, Group: 0}
 		}
 	}
-
-	cinemaId := global.CurrentCinemaID + 1
-	global.CurrentCinemaID = cinemaId
 
 	// reset global.Cinema
 	global.Cinema = nil
@@ -37,10 +34,10 @@ func (c *cinemaService) InitCinema(rows int, cols int, minDistance int) (int, er
 		Cols:        cols,
 		MinDistance: minDistance,
 		Seats:       seats,
-		CinemaID:    cinemaId,
+		NextGroupID: 1,
 	}
 
 	utils.ShowCinema(global.Cinema)
 
-	return cinemaId, nil
+	return nil
 }

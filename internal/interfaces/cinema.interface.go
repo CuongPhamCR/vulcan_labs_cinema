@@ -14,6 +14,6 @@ type Cinema struct {
 	Cols        int
 	MinDistance int
 	Seats       [][]*Seat
-	CinemaID    int
+	NextGroupID int
 	Mutex       sync.Mutex
 }
