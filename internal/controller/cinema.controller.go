@@ -71,5 +71,9 @@ func (cc *CinemaController) GetAvailableSeats(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c, response.ErrCodeSuccess, availableSeats)
+	type AvailableSeatsResponse struct {
+		Seats [][]*interfaces.Seat `json:"seats"`
+	}
+
+	response.SuccessResponse(c, response.ErrCodeSuccess, AvailableSeatsResponse{Seats: availableSeats})
 }
