@@ -12,6 +12,7 @@ type ICinemaService interface {
 	InitCinema(rows int, cols int, minDistance int) error
 	GetAvailableSeats(count int) ([][]*interfaces.Seat, int)
 	ReserveSeats(data *interfaces.ReserveSeatsInput) (seats []interfaces.Seat, errCode int, err error)
+	CancelSeats(data *interfaces.CancelSeatsInput) (errCode int, err error)
 }
 
 type cinemaService struct{}
@@ -121,4 +122,42 @@ func (c *cinemaService) ReserveSeats(data *interfaces.ReserveSeatsInput) (seats 
 	utils.ShowCinema(cinema)
 
 	return seats, response.ErrCodeSuccess, nil
+}
+
+// CancelSeats implements ICinemaService.
+func (c *cinemaService) CancelSeats(data *interfaces.CancelSeatsInput) (errCode int, err error) {
+	cinema := global.Cinema
+
+	// check cinema is initialized
+	if cinema == nil {
+		return response.ErrCodeCinemaNotFound, nil
+	}
+
+	cinema.Mutex.Lock()
+	defer cinema.Mutex.Unlock()
+
+	// Cancel seats
+	for _, s := range data.Seats {
+		seat := cinema.Seats[s.Row][s.Col]
+		// check seat is exist
+		if seat == nil {
+			return response.ErrCodeSeatNotFound, nil
+		}
+
+		// check seat is booked
+		if !seat.IsBooked {
+			return response.ErrCodeSeatIsNotBooked, nil
+		}
+
+		seat.IsBooked = false
+		seat.Group = 0
+
+		// log cancelled seat
+		global.Logger.Info(fmt.Sprintf("Cancelled seat row: %d, col: %d", s.Row, s.Col))
+	}
+
+	// Show current cinema
+	utils.ShowCinema(cinema)
+
+	return response.ErrCodeSuccess, nil
 }

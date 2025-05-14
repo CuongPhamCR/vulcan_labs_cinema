@@ -14,3 +14,7 @@ type SeatInput struct {
 type ReserveSeatsInput struct {
 	Seats []*SeatInput `json:"seats" binding:"required"`
 }
+
+type CancelSeatsInput struct {
+	Seats []*SeatInput `json:"seats" binding:"required"`
+}

@@ -93,3 +93,21 @@ func (cc *CinemaController) ReserveSeats(c *gin.Context) {
 
 	response.SuccessResponse(c, response.ErrCodeSuccess, seats)
 }
+
+func (cc *CinemaController) CancelSeats(c *gin.Context) {
+	var payload interfaces.CancelSeatsInput
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errMessages := validation.FormatValidationError(err)
+		response.ErrorResponse(c, http.StatusBadRequest, response.ErrCodeParamInvalid, errMessages[0])
+		return
+	}
+
+	errCode, err := cc.cinemaService.CancelSeats(&payload)
+	if errCode != response.ErrCodeSuccess && err == nil {
+		response.ErrorResponse(c, http.StatusNotFound, errCode, "")
+		return
+	}
+
+	response.SuccessResponse(c, response.ErrCodeSuccess, nil)
+}
