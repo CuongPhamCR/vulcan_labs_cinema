@@ -8,7 +8,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Hàm format lỗi validation
 func FormatValidationError(err error) []string {
 	errMessages := []string{}
 
@@ -29,7 +28,6 @@ func FormatValidationError(err error) []string {
 	return errMessages
 }
 
-// Hàm trả về thông điệp lỗi tùy chỉnh
 func getErrorMessage(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
@@ -51,7 +49,7 @@ func getErrorMessage(fe validator.FieldError) string {
 	}
 }
 
-// Middleware xử lý validation
+// Middleware handle validation
 func ValidationMiddleware(obj interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := c.ShouldBindJSON(obj); err != nil {

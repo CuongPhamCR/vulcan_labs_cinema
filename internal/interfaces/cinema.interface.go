@@ -3,10 +3,10 @@ package interfaces
 import "sync"
 
 type Seat struct {
-	Row   int  `json:"row"`
-	Col   int  `json:"col"`
-	Group int  `json:"group"`
-	Taken bool `json:"taken"`
+	Row      int  `json:"row"`
+	Col      int  `json:"col"`
+	Group    int  `json:"group"`
+	IsBooked bool `json:"is_booked"`
 }
 
 type Cinema struct {

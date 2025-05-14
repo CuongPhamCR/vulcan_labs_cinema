@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 	"vulcan_labs_cinema/internal/interfaces"
 	"vulcan_labs_cinema/internal/services"
@@ -53,4 +55,21 @@ func (cc *CinemaController) InitCinema(c *gin.Context) {
 		Cols:        payload.Cols,
 		MinDistance: payload.MinDistance,
 	})
+}
+
+func (cc *CinemaController) GetAvailableSeats(c *gin.Context) {
+	fmt.Println("c . query :: ", c.Query("count"))
+	count, err := strconv.Atoi(c.Query("count"))
+	if err != nil || count <= 0 {
+		response.ErrorResponse(c, http.StatusBadRequest, response.ErrCodeInvalidCount, "")
+		return
+	}
+
+	availableSeats, errCode := cc.cinemaService.GetAvailableSeats(count)
+	if errCode != response.ErrCodeSuccess {
+		response.ErrorResponse(c, http.StatusNotFound, errCode, "")
+		return
+	}
+
+	response.SuccessResponse(c, response.ErrCodeSuccess, availableSeats)
 }
