@@ -11,6 +11,7 @@ import (
 type ICinemaService interface {
 	InitCinema(rows int, cols int, minDistance int) error
 	GetAvailableSeats(count int) ([][]*interfaces.Seat, int)
+	ReserveSeats(data *interfaces.ReserveSeatsInput) (seats []interfaces.Seat, errCode int, err error)
 }
 
 type cinemaService struct{}
@@ -76,4 +77,48 @@ func (c *cinemaService) GetAvailableSeats(count int) (seats [][]*interfaces.Seat
 	}
 
 	return result, response.ErrCodeSuccess
+}
+
+// ReserveSeats implements ICinemaService.
+func (c *cinemaService) ReserveSeats(data *interfaces.ReserveSeatsInput) (seats []interfaces.Seat, errCode int, err error) {
+	cinema := global.Cinema
+
+	// check cinema is initialized
+	if cinema == nil {
+		return nil, response.ErrCodeCinemaNotFound, nil
+	}
+
+	cinema.Mutex.Lock()
+	defer cinema.Mutex.Unlock()
+
+	// Check seats
+	for _, s := range data.Seats {
+		if s.Row >= cinema.Rows || s.Col >= cinema.Cols || cinema.Seats[s.Row][s.Col].IsBooked || !utils.IsValidSeat(s.Row, s.Col, cinema) {
+			return nil, response.ErrCodeSeatNotAvailableOrInvalid, nil
+		}
+	}
+
+	groupID := cinema.NextGroupID
+	cinema.NextGroupID++
+
+	// Seat data for response
+	seats = []interfaces.Seat{}
+
+	// Reserve seats
+	for _, s := range data.Seats {
+		// log seat
+		global.Logger.Info(fmt.Sprintf("Reserved seat row: %d, col: %d", s.Row, s.Col))
+
+		seat := cinema.Seats[s.Row][s.Col]
+		seat.IsBooked = true
+		seat.Group = groupID
+
+		// Add to response
+		seats = append(seats, interfaces.Seat{Row: s.Row, Col: s.Col, Group: groupID, IsBooked: true})
+	}
+
+	// Show current cinema
+	utils.ShowCinema(cinema)
+
+	return seats, response.ErrCodeSuccess, nil
 }

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -58,7 +57,6 @@ func (cc *CinemaController) InitCinema(c *gin.Context) {
 }
 
 func (cc *CinemaController) GetAvailableSeats(c *gin.Context) {
-	fmt.Println("c . query :: ", c.Query("count"))
 	count, err := strconv.Atoi(c.Query("count"))
 	if err != nil || count <= 0 {
 		response.ErrorResponse(c, http.StatusBadRequest, response.ErrCodeInvalidCount, "")
@@ -76,4 +74,22 @@ func (cc *CinemaController) GetAvailableSeats(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c, response.ErrCodeSuccess, AvailableSeatsResponse{Seats: availableSeats})
+}
+
+func (cc *CinemaController) ReserveSeats(c *gin.Context) {
+	var payload interfaces.ReserveSeatsInput
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errMessages := validation.FormatValidationError(err)
+		response.ErrorResponse(c, http.StatusBadRequest, response.ErrCodeParamInvalid, errMessages[0])
+		return
+	}
+
+	seats, errCode, err := cc.cinemaService.ReserveSeats(&payload)
+	if errCode != response.ErrCodeSuccess && err == nil {
+		response.ErrorResponse(c, http.StatusNotFound, errCode, "")
+		return
+	}
+
+	response.SuccessResponse(c, response.ErrCodeSuccess, seats)
 }

@@ -19,7 +19,7 @@ func (cr *CinemaRouter) InitCinemaRouter(Router *gin.RouterGroup) {
 	{
 		cinemaGroup.POST("/init", cinemaController.InitCinema)
 		cinemaGroup.GET("/seats/available", cinemaController.GetAvailableSeats)
-		// cinemaGroup.POST("seats/reserve", cinemaController.ReserveSeats)
+		cinemaGroup.POST("/seats/reserve", cinemaController.ReserveSeats)
 		// cinemaGroup.POST("seats/cancel", cinemaController.CancelSeats)
 	}
 }

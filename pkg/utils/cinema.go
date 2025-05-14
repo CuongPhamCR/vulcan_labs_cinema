@@ -27,10 +27,10 @@ func ManhattanDistance(s1 *interfaces.Seat, s2 *interfaces.Seat) int {
 }
 
 func IsValidSeat(row, col int, cinema *interfaces.Cinema) bool {
-	for i := range cinema.Rows {
-		for j := range cinema.Cols {
-			seat := cinema.Seats[i][j]
-			if seat.IsBooked && ManhattanDistance(&interfaces.Seat{Row: row, Col: col}, seat) < cinema.MinDistance {
+	D := cinema.MinDistance
+	for i := max(0, row-D); i <= min(cinema.Rows-1, row+D); i++ {
+		for j := max(0, col-D); j <= min(cinema.Cols-1, col+D); j++ {
+			if cinema.Seats[i][j].IsBooked && ManhattanDistance(&interfaces.Seat{Row: row, Col: col}, cinema.Seats[i][j]) < D {
 				return false
 			}
 		}
