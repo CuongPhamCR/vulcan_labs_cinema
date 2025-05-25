@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"sort"
 	"vulcan_labs_cinema/global"
 	"vulcan_labs_cinema/internal/interfaces"
 	"vulcan_labs_cinema/pkg/response"
@@ -89,32 +90,52 @@ func (c *cinemaService) ReserveSeats(data *interfaces.ReserveSeatsInput) (seats 
 		return nil, response.ErrCodeCinemaNotFound, nil
 	}
 
-	cinema.Mutex.Lock()
-	defer cinema.Mutex.Unlock()
-
-	// Check seats
-	for _, s := range data.Seats {
-		if s.Row >= cinema.Rows || s.Col >= cinema.Cols || cinema.Seats[s.Row][s.Col].IsBooked || !utils.IsValidSeat(s.Row, s.Col, cinema) {
-			return nil, response.ErrCodeSeatNotAvailableOrInvalid, nil
-		}
-	}
-
+	// Get group id
+	cinema.GlobalMutex.Lock()
 	groupID := cinema.NextGroupID
 	cinema.NextGroupID++
+	cinema.GlobalMutex.Unlock()
 
 	// Seat data for response
 	seats = []interfaces.Seat{}
 
-	// Reserve seats
-	for _, s := range data.Seats {
-		// log seat
-		global.Logger.Info(fmt.Sprintf("Reserved seat row: %d, col: %d", s.Row, s.Col))
+	seats = []interfaces.Seat{}
 
+	rowSet := map[int]struct{}{}
+	for _, s := range data.Seats {
+		if s.Row >= cinema.Rows || s.Col >= cinema.Cols {
+			return nil, response.ErrCodeSeatNotAvailableOrInvalid, nil
+		}
+		rowSet[s.Row] = struct{}{}
+	}
+
+	lockedRows := []int{}
+	for r := range rowSet {
+		lockedRows = append(lockedRows, r)
+	}
+	sort.Ints(lockedRows)
+	for _, r := range lockedRows {
+		cinema.RowLocks[r].Lock()
+	}
+	defer func() {
+		for _, r := range lockedRows {
+			cinema.RowLocks[r].Unlock()
+		}
+	}()
+
+	for _, s := range data.Seats {
+		seat := cinema.Seats[s.Row][s.Col]
+		if seat.IsBooked || !utils.IsValidSeat(s.Row, s.Col, cinema) {
+			return nil, response.ErrCodeSeatNotAvailableOrInvalid, nil
+		}
+	}
+
+	// Reserve seat
+	for _, s := range data.Seats {
 		seat := cinema.Seats[s.Row][s.Col]
 		seat.IsBooked = true
 		seat.Group = groupID
-
-		// Add to response
+		global.Logger.Info(fmt.Sprintf("Reserved seat row: %d, col: %d", s.Row, s.Col))
 		seats = append(seats, interfaces.Seat{Row: s.Row, Col: s.Col, Group: groupID, IsBooked: true})
 	}
 
@@ -133,18 +154,35 @@ func (c *cinemaService) CancelSeats(data *interfaces.CancelSeatsInput) (errCode 
 		return response.ErrCodeCinemaNotFound, nil
 	}
 
-	cinema.Mutex.Lock()
-	defer cinema.Mutex.Unlock()
+	rowSet := map[int]struct{}{}
+	for _, s := range data.Seats {
+		if s.Row >= cinema.Rows || s.Col >= cinema.Cols {
+			return response.ErrCodeSeatNotFound, nil
+		}
+		rowSet[s.Row] = struct{}{}
+	}
 
-	// Cancel seats
+	lockedRows := []int{}
+	for r := range rowSet {
+		lockedRows = append(lockedRows, r)
+	}
+
+	sort.Ints(lockedRows)
+	for _, r := range lockedRows {
+		cinema.RowLocks[r].Lock()
+	}
+	defer func() {
+		for _, r := range lockedRows {
+			cinema.RowLocks[r].Unlock()
+		}
+	}()
+
+	// Cancel
 	for _, s := range data.Seats {
 		seat := cinema.Seats[s.Row][s.Col]
-		// check seat is exist
 		if seat == nil {
 			return response.ErrCodeSeatNotFound, nil
 		}
-
-		// check seat is booked
 		if !seat.IsBooked {
 			return response.ErrCodeSeatIsNotBooked, nil
 		}
@@ -152,7 +190,6 @@ func (c *cinemaService) CancelSeats(data *interfaces.CancelSeatsInput) (errCode 
 		seat.IsBooked = false
 		seat.Group = 0
 
-		// log cancelled seat
 		global.Logger.Info(fmt.Sprintf("Cancelled seat row: %d, col: %d", s.Row, s.Col))
 	}
 
